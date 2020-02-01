@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="YoutubeMp3.MainPage"
+             Title="Youtube To MP3">
+
+    <StackLayout Margin="20,20,20,0">
+        <!-- Place new controls here -->
+        <Label Text="" FontAttributes="Bold" FontSize="15" TextColor="#8C1F3D" />
+        
+        <Editor x:Name="txtUrl" VerticalOptions="FillAndExpand" Placeholder="Enter url here...." Keyboard="Plain" />
+        <Button Text="Download"
+                x:Name="btnDownload"
+                Clicked="btnDownload_Clicked_1" FontAttributes="Bold" BackgroundColor="#B71837" TextColor="#FFFFFF" />
+        <Editor x:Name="txtStatus" VerticalOptions="FillAndExpand" IsReadOnly="True" TextColor="#A70A41" />
+
+        <Label Text="J A M L . G A" TextColor="#B71A39" HorizontalTextAlignment="Center" />
+    </StackLayout>
+</ContentPage>
