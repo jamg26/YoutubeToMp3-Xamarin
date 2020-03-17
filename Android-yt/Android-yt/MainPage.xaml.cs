@@ -11,88 +11,88 @@ using System.Net.Http;
 
 namespace YoutubeMp3
 {
-    
+
     // Learn more about making custom code visible in the Xamarin.Forms previewer
     // by visiting https://aka.ms/xamarinforms-previewer
     [DesignTimeVisible(false)]
     public partial class MainPage : ContentPage
     {
-        
+
         private int totalCount, CurrentCount;
         private static readonly HttpClient client = new HttpClient();
+        private string activated, message, option;
+        private Android.Content.Context context = Android.App.Application.Context;
 
         public MainPage()
         {
             InitializeComponent();
-            try
-            {
-                _ = getSetting();
-            }
-            catch(Exception e)
-            {
-                txtStatus.Text += e.Message;
-            }
         }
 
-        private async Task getSetting()
+        private async Task isActivated()
         {
-            var response = await client.GetAsync("http://iswine.ml/.jamg/enabled");
-            string responseString = await response.Content.ReadAsStringAsync();
-            if (responseString.ToString().Replace("\n", string.Empty) != "true")
-            {
-                Device.BeginInvokeOnMainThread(async () => { 
-                    await DisplayAlert("Alert", "This app is under maintenance", "OK");
-                    Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
-                });
-            }
             
+            var response = await client.GetAsync("http://pastebin.com/raw/Kc2p01gk");
+            string responseString = await response.Content.ReadAsStringAsync();
+
+            string[] res = responseString.ToString().Split('\n');
+            activated = res[0].Trim();
+            message = res[1];
+
+            if (activated != "true")
+            {
+                await DisplayAlert("Alert", message, "OK");
+                Android.OS.Process.KillProcess(Android.OS.Process.MyPid());
+            }
         }
 
-        private void btnDownload_Clicked_1(object sender, EventArgs e)
+        private async void btnDownload_Clicked_1(object sender, EventArgs e)
         {
             btnDownload.IsEnabled = false;
+            _ = isActivated();
             string[] url = { };
-            try {
+            txtStatus.Text += $"\nPlease wait while I'm doing your request.\n";
+            try
+            {
+                option = picker.SelectedItem.ToString();
                 url = txtUrl.Text.Split('\n');
                 int count = url.Length;
                 CurrentCount = 0;
                 totalCount = count;
-                txtStatus.Text += $"\nDownloading {totalCount} Files...\n";
+
+                btnDownload.IsEnabled = false;
                 for (int x = 0; x < count; x++)
                 {
                     if (url[x].Contains("youtube.com/watch?v=") || url[x].Contains("youtu.be"))
                     {
-                        _ = GetVideo(url[x]);
+                        await GetVideo(url[x]);
                     }
                     else
                     {
-                        var context = Android.App.Application.Context;
-                        var tostMessage = $"{url[x]} is invalid.";
-                        var durtion = ToastLength.Long;
-                        Toast.MakeText(context, tostMessage, durtion).Show();
+                        txtStatus.Text += $"\n{url[x]} is invalid.\n";
                     }
                 }
-
-
-
-            } catch { 
-                txtStatus.Text += $"\nURL Cannot be empty!\n";
+                Toast.MakeText(context, "Done", ToastLength.Long);
+                btnDownload.IsEnabled = true;
+            }
+            catch
+            {
+                txtStatus.Text += $"\nError in the url field!\n";
                 btnDownload.IsEnabled = true;
             }
 
-            
+
         }
 
         private async Task GetVideo(string url)
         {
 
-            txtStatus.Text += $"Fetching {url}\n";
+            txtStatus.Text += $"Fetching\n{url}\n";
 
             var id = YoutubeClient.ParseVideoId(url);
             var client = new YoutubeClient();
             var video = await client.GetVideoAsync(id);
 
-            string path = @"/mnt/sdcard/AA-DownloadedMusic/";
+            string path = @"/mnt/sdcard/Downloads/YoutubeToMp3/";
 
             if (!Directory.Exists(path))
             {
@@ -101,18 +101,41 @@ namespace YoutubeMp3
 
             txtStatus.Text += $"Get Stream Info Set...\n";
             var streamInfoSet = await client.GetVideoMediaStreamInfosAsync(id);
-            txtStatus.Text += $"Geting Audio...\n";
-            var streamInfo = await Task.Run(() => streamInfoSet.Audio.WithHighestBitrate());
 
-            //var ext = streamInfo.Container.GetFileExtension();
-            txtStatus.Text += $"Saving to file...\n";
-            // Download stream to file
-            try
+            if (option == "MP3")
             {
-                await client.DownloadMediaStreamAsync(streamInfo, $@"{path}{video.Title.Replace('/', ' ')}.mp3");
-            } catch (Exception e)
+                txtStatus.Text += $"Geting Audio...\n";
+                var streamInfo = streamInfoSet.Audio.WithHighestBitrate();
+                
+                txtStatus.Text += $"Saving to file...\n";
+                // Download stream to file
+                try
+                {
+                    await client.DownloadMediaStreamAsync(streamInfo, $@"{path}{video.Title.Replace('/', ' ')}.mp3");
+                }
+                catch (Exception e)
+                {
+                    txtStatus.Text += $"\n=======================\nReport this error to me\n{e.Message}\n=======================\n\n";
+                }
+
+            }
+            else
             {
-                txtStatus.Text += $"\n=======================\nReport this error to me\n{e.Message}\n=======================\n\n";
+                txtStatus.Text += $"Geting Video...\n";
+                var streamInfo = streamInfoSet.Muxed.WithHighestVideoQuality();
+
+                var ext = streamInfo.Container.GetFileExtension();
+                //var ext = streamInfo.Container.GetFileExtension();
+                txtStatus.Text += $"Saving to file...\n";
+                // Download stream to file
+                try
+                {
+                    await client.DownloadMediaStreamAsync(streamInfo, $@"{path}{video.Title.Replace('/', ' ')}.{ext}");
+                }
+                catch (Exception e)
+                {
+                    txtStatus.Text += $"\n=======================\nReport this error to me\n{e.Message}\n=======================\n\n";
+                }
             }
 
             txtStatus.Text += $"{CurrentCount + 1}/{totalCount} completed\n";
@@ -120,10 +143,12 @@ namespace YoutubeMp3
 
             if (totalCount == CurrentCount)
             {
-                txtStatus.Text += "\nTask Completed Successfully!\nIf you found bugs and errors please contact me.\n\nFB: Jamuel Galicia";
+                txtStatus.Text += "\nTask Completed Successfully!\nIf you found bugs and errors please contact me.\n\nFB: Jamuel Galicia\n";
                 btnDownload.IsEnabled = true;
                 GC.Collect();
             }
+
+
         }
     }
 }
