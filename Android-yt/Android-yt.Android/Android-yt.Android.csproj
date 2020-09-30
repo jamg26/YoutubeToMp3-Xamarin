@@ -97,6 +97,9 @@
     <PackageReference Include="Xamarin.Forms">
       <Version>4.6.0.379-pre1</Version>
     </PackageReference>
+    <PackageReference Include="YoutubeExplode.Converter">
+      <Version>1.4.3</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
@@ -126,14 +129,15 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\icon.png" />
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\drawable\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Android-yt\YoutubeMp3.csproj">
       <Project>{0798032C-5204-42BF-9830-FE48530B930A}</Project>
       <Name>YoutubeMp3</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\arrow.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

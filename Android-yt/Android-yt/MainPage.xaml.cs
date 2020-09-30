@@ -8,6 +8,7 @@ using Xamarin.Forms;
 using YoutubeExplode;
 using YoutubeExplode.Models.MediaStreams;
 using System.Net.Http;
+using YoutubeExplode.Converter;
 
 namespace YoutubeMp3
 {
@@ -73,23 +74,24 @@ namespace YoutubeMp3
                 }
                 Toast.MakeText(context, "Done", ToastLength.Long);
                 btnDownload.IsEnabled = true;
-            }
-            catch
-            {
-                txtStatus.Text += $"\nError in the url field!\n";
-                btnDownload.IsEnabled = true;
-            }
-
-
         }
+        catch (Exception ee)
+        {
+            txtStatus.Text += $"\n=======================\nERROR\n{ee.Message}\n=======================\n\n";
+            btnDownload.IsEnabled = true;
+        }
+
+
+}
 
         private async Task GetVideo(string url)
         {
 
             txtStatus.Text += $"Fetching\n{url}\n";
-
+            var converter = new YoutubeConverter();
             var id = YoutubeClient.ParseVideoId(url);
             var client = new YoutubeClient();
+            
             var video = await client.GetVideoAsync(id);
 
             string path = @"/mnt/sdcard/Downloads/YoutubeToMp3/";
@@ -106,12 +108,20 @@ namespace YoutubeMp3
             {
                 txtStatus.Text += $"Geting Audio...\n";
                 var streamInfo = streamInfoSet.Audio.WithHighestBitrate();
-                
+
+
+                var ext = streamInfo.Container.GetFileExtension();
+
                 txtStatus.Text += $"Saving to file...\n";
                 // Download stream to file
                 try
                 {
-                    await client.DownloadMediaStreamAsync(streamInfo, $@"{path}{video.Title.Replace('/', ' ')}.mp3");
+                    string audioPath = $@"{path}{video.Title.Replace('/', ' ')}.";
+                    await client.DownloadMediaStreamAsync(streamInfo, $@"{audioPath}.{ext}");
+
+
+                    //var mediaStreamInfos = new MediaStreamInfo[] { streamInfo };
+                    //await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, $@"{audioPath}.mp3", "mp3");
                 }
                 catch (Exception e)
                 {
@@ -125,7 +135,7 @@ namespace YoutubeMp3
                 var streamInfo = streamInfoSet.Muxed.WithHighestVideoQuality();
 
                 var ext = streamInfo.Container.GetFileExtension();
-                //var ext = streamInfo.Container.GetFileExtension();
+
                 txtStatus.Text += $"Saving to file...\n";
                 // Download stream to file
                 try
